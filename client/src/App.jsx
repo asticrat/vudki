@@ -1053,7 +1053,7 @@ function App() {
                     </div>
                     <div className="flex items-center space-x-2">
                       {/* Role Badges with Icons */}
-                      {u.role === 'admin' && (
+                      {member.role === 'admin' && (
                         <span className="text-[10px] uppercase font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded flex items-center space-x-1">
                           <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
@@ -1061,7 +1061,7 @@ function App() {
                           <span>Admin</span>
                         </span>
                       )}
-                      {u.role === 'co-admin' && (
+                      {member.role === 'co-admin' && (
                         <span className="text-[10px] uppercase font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded flex items-center space-x-1">
                           <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -1071,14 +1071,14 @@ function App() {
                       )}
 
                       {/* Admin Controls */}
-                      {user.role === 'admin' && u.id !== user.id && (
+                      {user.role === 'admin' && member.id !== user.id && (
                         <>
                           {/* Member Actions */}
-                          {u.role === 'member' && (
+                          {member.role === 'member' && (
                             <>
                               {/* Transfer Admin (LEFT - PURPLE) */}
                               <button
-                                onClick={() => handleTransferAdmin(u.id, u.name)}
+                                onClick={() => handleTransferAdmin(member.id, member.name)}
                                 className="relative p-1.5 bg-purple-50 text-purple-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-purple-100 group/btn"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1087,13 +1087,13 @@ function App() {
                                   <polyline points="17 11 19 13 23 9" />
                                 </svg>
                                 <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-opacity duration-100">
-                                  Make {u.name} Admin
+                                  Make {member.name} Admin
                                 </span>
                               </button>
 
                               {/* Promote to Co-Admin (RIGHT - AMBER) */}
                               <button
-                                onClick={() => handlePromoteMember(u.id, u.name)}
+                                onClick={() => handlePromoteMember(member.id, member.name)}
                                 className="relative p-1.5 bg-amber-50 text-amber-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-amber-100 group/btn"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1103,16 +1103,16 @@ function App() {
                                   <line x1="23" y1="11" x2="17" y2="11" />
                                 </svg>
                                 <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-opacity duration-100">
-                                  Make {u.name} Co-Admin
+                                  Make {member.name} Co-Admin
                                 </span>
                               </button>
                             </>
                           )}
 
                           {/* Co-Admin Actions */}
-                          {u.role === 'co-admin' && (
+                          {member.role === 'co-admin' && (
                             <button
-                              onClick={() => handleDemoteMember(u.id, u.name)}
+                              onClick={() => handleDemoteMember(member.id, member.name)}
                               className="p-1.5 bg-slate-100 text-slate-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-200"
                               title="Demote to Member"
                             >
@@ -1126,7 +1126,7 @@ function App() {
 
                           {/* Delete Button */}
                           <button
-                            onClick={() => setDeleteModalUser(u)}
+                            onClick={() => setDeleteModalUser(member)}
                             className="p-1.5 bg-rose-100 text-rose-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <TrashIcon />
@@ -1135,9 +1135,9 @@ function App() {
                       )}
 
                       {/* Co-Admin can transfer their role */}
-                      {user.role === 'co-admin' && u.id !== user.id && u.role === 'member' && (
+                      {user.role === 'co-admin' && member.id !== user.id && member.role === 'member' && (
                         <button
-                          onClick={() => handleTransferCoAdmin(u.id, u.name)}
+                          onClick={() => handleTransferCoAdmin(member.id, member.name)}
                           className="relative p-1.5 bg-purple-50 text-purple-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-purple-100 group/btn"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1146,7 +1146,7 @@ function App() {
                             <polyline points="17 11 19 13 23 9" />
                           </svg>
                           <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-opacity duration-100">
-                            Make {u.name} Co-Admin
+                            Make {member.name} Co-Admin
                           </span>
                         </button>
                       )}
