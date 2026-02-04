@@ -17,6 +17,16 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
+// Serve Frontend (Vite Build)
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Handle React Routing, return all requests to React app
+app.get('*', (req, res, next) => {
+    // Skip if request is for API
+    if (req.url.startsWith('/api') || req.url.startsWith('/uploads')) return next();
+    res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
+});
+
 // Multer setup
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
