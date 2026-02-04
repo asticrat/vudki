@@ -745,6 +745,19 @@ app.post('/api/receipts/analyze', authenticateToken, upload.single('receipt'), a
     const imagePath = 'uploads/' + req.file.filename;
     const fullPath = req.file.path;
 
+    // Check query or body for skipOCR
+    if (req.body.skipOCR === 'true') {
+        return res.json({
+            message: 'Image uploaded successfully (OCR skipped)',
+            data: {
+                amount: '',
+                date: new Date().toISOString().split('T')[0],
+                description: 'Receipt',
+                imagePath: imagePath
+            }
+        });
+    }
+
     try {
         console.log(`\n==== OCR Request for ${req.file.filename} ====`);
 

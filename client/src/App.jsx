@@ -318,6 +318,7 @@ function App() {
         setMode('analyzing');
         const fd = new FormData();
         fd.append('receipt', file);
+        fd.append('skipOCR', 'true');
 
         try {
           const res = await apiCall('/api/receipts/analyze', { method: 'POST', body: fd });
