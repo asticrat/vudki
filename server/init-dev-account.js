@@ -47,8 +47,8 @@ async function initDevAccount() {
             const hashedPassword = await bcrypt.hash('Moonfallen008', 10);
 
             await pool.query(
-                'INSERT INTO users (username, nickname, password_hash, role, household_id) VALUES ($1, $2, $3, $4, $5)',
-                ['dev', 'Developer', hashedPassword, 'admin', householdId]
+                'INSERT INTO users (username, nickname, password_hash, role, household_id, avatar, gender) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+                ['dev', 'Developer', hashedPassword, 'admin', householdId, 'male/avatar1.png', 'male']
             );
 
             // Update role constraint and set to developer

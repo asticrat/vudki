@@ -796,7 +796,7 @@ function App() {
           {/* Large Avatar Display at Top */}
           <div className="flex flex-col items-center mb-6">
             <img
-              src={`/src/assets/avatars/${user.avatar || 'male/avatar1.png'}`}
+              src={`/avatars/${user.avatar || 'male/avatar1.png'}`}
               alt="Your Avatar"
               className="w-32 h-32 rounded-full border-4 border-white shadow-lg mb-3"
             />
@@ -855,7 +855,7 @@ function App() {
                     {/* Section 1 - Avatar & Role */}
                     <div className="flex flex-col items-center space-y-4">
                       <div className="relative">
-                        <img src={`/src/assets/avatars/${selectedAvatar}`} className="w-28 h-28 rounded-full border-4 border-white/50 shadow-lg" />
+                        <img src={`/avatars/${selectedAvatar}`} className="w-28 h-28 rounded-full border-4 border-white/50 shadow-lg" />
                         <button
                           onClick={() => setShowChangeAvatar(!showChangeAvatar)}
                           className="absolute bottom-0 right-0 p-2 bg-indigo-500 text-white rounded-full shadow-md hover:bg-indigo-600 transition-colors border-2 border-white"
@@ -890,7 +890,7 @@ function App() {
                                       disabled={isUsed}
                                       className={`p-1 rounded-lg border-2 transition-all relative ${isSelected ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200' : isUsed ? 'grayscale opacity-30 cursor-not-allowed border-transparent' : 'border-transparent hover:border-indigo-300'}`}
                                     >
-                                      <img src={`/src/assets/avatars/${avatar}`} className="w-full rounded-full" />
+                                      <img src={`/avatars/${avatar}`} className="w-full rounded-full" />
                                     </button>
                                   );
                                 })}
@@ -1040,17 +1040,15 @@ function App() {
                   // Admin first, then co-admin, then members
                   const roleOrder = { 'admin': 0, 'co-admin': 1, 'member': 2, 'developer': 3 };
                   return roleOrder[a.role] - roleOrder[b.role];
-                }).map(u => (
-                  <div key={u.id} className="flex justify-between items-center p-3 bg-white/40 rounded-xl border border-white/30 shadow-sm group hover:bg-white/50 transition-colors">
+                }).map(member => (
+                  <div key={member.id} className="flex justify-between items-center p-3 bg-white/40 rounded-xl border border-white/30 shadow-sm group hover:bg-white/50 transition-colors">
                     <div className="flex items-center space-x-3">
-                      <img
-                        src={`/src/assets/avatars/${(String(u.id) === String(user.id) ? user.avatar : u.avatar) || 'male/avatar1.png'}`}
-                        alt={u.name}
-                        className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
-                      />
+                      <img src={`/avatars/${member.avatar}`} className={`w-10 h-10 rounded-full border-2 ${member.role === 'admin' ? 'border-amber-400' : member.role === 'co-admin' ? 'border-indigo-400' : 'border-white'}`} />
                       <div>
-                        <div className="font-bold text-slate-700">{u.name}</div>
-                        <div className="text-[10px] text-slate-400">@{u.username}</div>
+                        <div className="font-bold text-slate-700 text-sm flex items-center">
+                          {member.name}
+                        </div>
+                        <div className="text-[10px] text-slate-400">@{member.username}</div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">

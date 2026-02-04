@@ -2,100 +2,124 @@
 description: Deploy Vudki globally on Raspberry Pi 5 using Cloudflare Tunnel
 ---
 
-# Deploy Vudki on Pi 5 (Global Access)
+# Deploy Vudki Globally with Cloudflare Tunnel (Free & Secure)
 
-This guide will help you expose your local Vudki server running on your Pi 5 to the internet securely using Cloudflare Tunnel.
+This guide takes your local Vudki app and makes it accessible globally (e.g., `https://vudki.yourname.com`) using your Raspberry Pi 5. No port forwarding is required.
 
-## Prerequisites
-- A **Raspberry Pi 5** with internet access.
-- **Node.js** (v18+) and **PostgreSQL** installed on the Pi.
-- A **Cloudflare Account** (free).
-- (Optional) A **Domain Name** managed by Cloudflare.
+## Phase 1: Prepare Raspberry Pi (SSH In)
 
-## Step 1: Prepare the Application on Pi 5
-1.  **Transfer Code**: Copy the entire `vudki` project folder to your Pi 5.
-2.  **Environment Variables**: 
-    - Ensure `server/.env` exists and contains correct DB credentials and `JWT_SECRET`.
-3.  **Install Dependencies**:
-    ```bash
-    cd vudki
-    npm install
-    cd client && npm install
-    cd ../server && npm install
-    ```
-4.  **Build Frontend**:
-    We will serve the frontend via the Node.js backend to simplify deployment.
-    ```bash
-    cd vudki/client
-    npm run build
-    ```
-    *This creates a `dist` folder which the server is configured to serve.*
-5.  **Start Server**:
-    ```bash
-    cd vudki/server
-    npm start
-    # OR
-    node index.js
-    ```
-    *Verify it runs on `http://localhost:3000` (or your configured PORT).*
+**1. Update System & Install Essentials**
+```bash
+sudo apt update && sudo apt upgrade -y
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs postgresql postgresql-contrib git
+```
 
-## Step 2: Install Cloudflare Tunnel (`cloudflared`) on Pi
-1.  **Download & Install**:
-    (Assuming Pi 5 runs 64-bit Linux ARM64 (standard Raspberry Pi OS Bookworm 64-bit))
-    ```bash
-    curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64.deb
-    sudo dpkg -i cloudflared.deb
-    ```
-2.  **Verify Setup**:
-    ```bash
-    cloudflared version
-    ```
+**2. Setup Database**
+```bash
+sudo -u postgres psql
+# Inside SQL prompt:
+CREATE DATABASE house_split;
+ALTER USER postgres WITH PASSWORD 'postgres';
+\q
+```
 
-## Step 3: Start a Quick Tunnel (Easiest Method)
-If you just want to test it quickly without a domain:
+## Phase 2: Deploy Code
 
-1.  **Run Tunel**:
-    ```bash
-    cloudflared tunnel --url http://localhost:3000
-    ```
-2.  **Get URL**:
-    - The terminal will output a URL like `https://funny-names-random-words.trycloudflare.com`.
-    - **Share this URL**. It is globally accessible!
+**1. Clone Repo**
+```bash
+git clone https://github.com/asticrat/vudki.git
+cd vudki
+```
 
-## Step 4: Persistent Tunnel (Recommended for Permanent Use)
-If you have a domain (e.g., `example.com`) on Cloudflare:
+**2. Backend Setup**
+```bash
+cd server
+npm ci --production
+# Create production .env
+echo "PORT=3000
+DB_USER=postgres
+DB_HOST=localhost
+DB_NAME=house_split
+DB_PASSWORD=postgres
+DB_PORT=5432
+JWT_SECRET=$(openssl rand -hex 32)" > .env
 
-1.  **Login**:
-    ```bash
-    cloudflared tunnel login
-    ```
-    *Follow the link to authorize.*
-2.  **Create Tunnel**:
-    ```bash
-    cloudflared tunnel create vudki-pi
-    ```
-    *Note the Tunnel UUID output.*
-3.  **Configure**:
-    Create a config file `config.yml` (e.g., in `~/.cloudflared/`):
-    ```yaml
-    tunnel: <Tunnel-UUID>
-    credentials-file: /home/pi/.cloudflared/<Tunnel-UUID>.json
-    
-    ingress:
-      - hostname: vudki.example.com
-        service: http://localhost:3000
-      - service: http_status:404
-    ```
-4.  **Route DNS**:
-    ```bash
-    cloudflared tunnel route dns vudki-pi vudki.example.com
-    ```
-5.  **Run Tunnel**:
-    ```bash
-    cloudflared tunnel run vudki-pi
-    ```
-    *Use `systemd` to keep it running in background.*
+# Initialize DB
+node init_db.js
+node init-dev-account.js
+```
 
-## Troubleshooting
-- **Frontend 404s**: Ensure you ran `npm run build` in the `client` folder.
-- **Database Errors**: Ensure PostgreSQL is running on the Pi (`sudo systemctl status postgresql`) and credentials in `.env` match.
+**3. Frontend Setup**
+```bash
+cd ../client
+npm install
+npm run build
+```
+
+**4. Link Frontend to Backend**
+We will serve the frontend *through* the backend for simplicity.
+*   Move the build files: `mv dist ../server/public`
+*   Modified `server/index.js` already handles static serving (ensure it serves `public` or `client/dist`).
+
+**5. Start with PM2 (Process Manager)**
+```bash
+sudo npm install -g pm2
+cd ../server
+pm2 start index.js --name "vudki-app"
+pm2 save
+pm2 startup
+```
+*Your app is now running locally on the Pi at `http://localhost:3000`*
+
+## Phase 3: Go Global (Cloudflare Tunnel)
+
+This is the magic step. It assigns a secure HTTPS URL to your Pi without opening router ports.
+
+**1. Install Cloudflared**
+```bash
+# Add Cloudflare GPG key
+sudo mkdir -p --mode=0755 /usr/share/keyrings
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
+
+# Add Repo
+echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared jammy main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
+
+# Install
+sudo apt-get update && sudo apt-get install cloudflared
+```
+
+**2. Authenticate & Create Tunnel**
+```bash
+cloudflared tunnel login
+# (Click the link, login to Cloudflare Dashboard)
+
+cloudflared tunnel create vudki-tunnel
+# (Copy the Tunnel ID generated)
+
+# Route to your domain (assuming you have a domain on Cloudflare)
+cloudflared tunnel route dns vudki-tunnel vudki.yourdomain.com
+# OR simply use the random URL provided if you don't have a domain:
+cloudflared tunnel --url http://localhost:3000
+```
+
+**3. Run Tunnel Permanently**
+Create a config file: `nano ~/.cloudflared/config.yml`
+```yaml
+tunnel: <Tunnel-UUID>
+credentials-file: /home/pi/.cloudflared/<Tunnel-UUID>.json
+
+ingress:
+  - hostname: vudki.yourdomain.com
+    service: http://localhost:3000
+  - service: http_status:404
+```
+
+Start the service:
+```bash
+sudo cloudflared service install
+sudo systemctl start cloudflared
+```
+
+## Done! 🚀
+Visit `https://vudki.yourdomain.com` (or the provided random URL) from anywhere in the world.
