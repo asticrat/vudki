@@ -12,7 +12,7 @@ const BalanceCard = ({ user }) => {
                 <div className="flex items-center space-x-3">
                     {/* Conditional rendering for avatar or initial */}
                     {user.avatar ? (
-                        <img src={`/src/assets/avatars/${user.avatar}`} className="w-10 h-10 rounded-full shadow-md" alt={user.name} />
+                        <img src={`/avatars/${user.avatar}`} className="w-10 h-10 rounded-full shadow-md" alt={user.name} />
                     ) : (
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-md ${isOwed ? 'bg-emerald-500 shadow-emerald-200' : isDebt ? 'bg-rose-500 shadow-rose-200' : 'bg-slate-400'}`}>
                             {user.name.charAt(0).toUpperCase()}
