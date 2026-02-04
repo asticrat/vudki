@@ -21,7 +21,9 @@ app.use('/uploads', express.static('uploads'));
 app.use(express.static(path.join(__dirname, '../client/dist')));
 
 // Handle React Routing, return all requests to React app
-app.get('*', (req, res, next) => {
+// Handle React Routing, return all requests to React app
+// Using regex syntax (.*) for compatibility with newer Express/path-to-regexp
+app.get(/(.*)/, (req, res, next) => {
     // Skip if request is for API
     if (req.url.startsWith('/api') || req.url.startsWith('/uploads')) return next();
     res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
