@@ -316,6 +316,30 @@ app.post('/api/house/reset', authenticateToken, async (req, res) => {
     }
 });
 
+// Delete Entire Household (Admin Only) - PERMANENT
+app.post('/api/house/delete', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.sendStatus(403);
+
+    const { adminPassword } = req.body;
+
+    try {
+        // Verify Admin Password
+        const adminRes = await pool.query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+        const admin = adminRes.rows[0];
+        if (!await bcrypt.compare(adminPassword, admin.password_hash)) {
+            return res.status(401).json({ error: 'Incorrect password.' });
+        }
+
+        // Delete Household (Cascade will delete users and receipts)
+        await pool.query('DELETE FROM households WHERE id = $1', [req.user.householdId]);
+
+        res.json({ message: 'Household deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Promote Member to Co-Admin (Admin Only)
 app.post('/api/members/promote', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin') return res.sendStatus(403);

@@ -317,8 +317,8 @@ function App() {
         // Manual entry - just upload the image
         setMode('analyzing');
         const fd = new FormData();
-        fd.append('receipt', file);
         fd.append('skipOCR', 'true');
+        fd.append('receipt', file);
 
         try {
           const res = await apiCall('/api/receipts/analyze', { method: 'POST', body: fd });
@@ -541,6 +541,10 @@ function App() {
     const [showResetHouse, setShowResetHouse] = useState(false);
     const [resetPassword, setResetPassword] = useState('');
 
+    // Delete Household State
+    const [showDeleteHouse, setShowDeleteHouse] = useState(false);
+    const [deleteHousePassword, setDeleteHousePassword] = useState('');
+
     const handleResetHouseData = async () => {
       if (!resetPassword) return alert('Please enter your password');
       if (!confirm('⚠️ WARNING: This will delete ALL receipts and reset all balances to $0.00. This action CANNOT be undone. Are you absolutely sure?')) return;
@@ -558,6 +562,29 @@ function App() {
         setResetPassword('');
         setShowResetHouse(false);
         fetchData(); // Refresh to show empty state
+      } catch (e) {
+        alert(e.message);
+      }
+    };
+
+    const handleDeleteHousehold = async () => {
+      if (!deleteHousePassword) return alert('Please enter your password');
+      if (!confirm('⛔ CRITICAL WARNING ⛔\n\nThis will PERMANENTLY DELETE your entire household, all members, and all data.\n\nTHIS CANNOT BE UNDONE.\n\nAre you absolutely sure?')) return;
+
+      try {
+        const res = await apiCall('/api/house/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ adminPassword: deleteHousePassword })
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Failed to delete household');
+        }
+
+        alert('✅ Household deleted successfully. Logging out.');
+        handleLogout();
       } catch (e) {
         alert(e.message);
       }
@@ -1265,6 +1292,63 @@ function App() {
                             className="w-full py-2 bg-rose-500 text-white font-bold rounded-lg text-xs hover:bg-rose-600 shadow-md transition-colors"
                           >
                             Reset All Data
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </GlassCard>
+            )
+          }
+
+          {/* Delete Household (Admin Only - Separate Section) */}
+          {
+            user.role === 'admin' && (
+              <GlassCard className="border-2 border-rose-500 bg-rose-50/10">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Zone of No Return</h3>
+                    <p className="text-[9px] text-rose-400 mt-0.5">Destroy Household</p>
+                  </div>
+                </div>
+
+                <div className="border-t border-rose-200 pt-3">
+                  <button
+                    onClick={() => setShowDeleteHouse(!showDeleteHouse)}
+                    className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center justify-between w-full p-1"
+                  >
+                    <span className="flex items-center space-x-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                      <span>Delete Household Permanently</span>
+                    </span>
+                    <span className="text-rose-400">{showDeleteHouse ? '-' : '+'}</span>
+                  </button>
+
+                  <AnimatePresence>
+                    {showDeleteHouse && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mt-2 space-y-2 p-3 bg-white/20 rounded-xl border-2 border-rose-500">
+                          <div className="text-xs text-rose-700 font-bold text-center">
+                            ⛔ This deletes EVERYTHING ⛔
+                          </div>
+                          <input
+                            type="password"
+                            placeholder="Admin Password"
+                            className="w-full p-2.5 rounded-lg text-sm bg-white border-2 border-rose-200 outline-none focus:ring-2 focus:ring-rose-500/20 transition-all placeholder:text-rose-300 text-rose-900"
+                            value={deleteHousePassword}
+                            onChange={e => setDeleteHousePassword(e.target.value)}
+                          />
+                          <button
+                            onClick={handleDeleteHousehold}
+                            className="w-full py-2 bg-rose-600 text-white font-bold rounded-lg text-xs hover:bg-rose-700 shadow-lg shadow-rose-500/30 transition-all"
+                          >
+                            CONFIRM DELETION
                           </button>
                         </div>
                       </motion.div>
